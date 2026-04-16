@@ -1,3 +1,99 @@
+<?php
+require_once('../classes/database.php');
+
+$con = new database();
+
+$allbooks = $con->viewBooks();
+$bookauthors = $con->viewAuthors();
+$listedGenre = $con->viewGenre();
+
+$bookCreateStatus = null;
+$bookCreateMessage = ' ';
+$addCopyCreateStatus = null;
+$addCopyCreateMessage = ' ';
+$assignCreateStatus = null; 
+$assignCreateMessage = ' ';
+$genreCreateStatus = null; 
+$genreCreateMessage = ' ';
+
+if(isset($_POST['save_book'])){
+
+  $title = $_POST['book_title'];
+  $ISBN = $_POST['book_isbn'];
+  $publication_year = $_POST['book_publication_year'];
+  $edition = $_POST['book_edition'];
+  $publisher = $_POST['book_publisher'];
+
+  try{
+    $book_id = $con->insertBook($title, $ISBN, $publication_year, $edition, $publisher);
+
+    $bookCreateStatus = 'success'; 
+    $bookCreateMessage = 'Book Saved Successfully.';
+
+  } catch (Exception $e) {
+    $bookCreateStatus = 'error';
+    $bookCreateMessage = $e->getMessage();
+  }
+
+
+}
+
+if(isset($_POST['add_copy'])){
+
+  $book_id = $_POST['book_id'];
+  $status = $_POST['status']; 
+
+  try{
+    $copy_id = $con->insertBookCopy($book_id, $status);
+
+    $addCopyCreateStatus = 'success'; 
+    $addCopyCreateMessage = 'Added Copy Successfully.';
+
+  } catch (Exception $e) {
+    $addCopyCreateStatus = 'error';
+    $addCopyCreateMessage = $e->getMessage();
+  }
+
+}
+
+if(isset($_POST['assign_author'])){
+
+  $book_id = $_POST['book_id'];
+  $author_id = $_POST['author_id']; 
+
+  try{
+    $baba_id = $con->insertBookAuthor($book_id, $author_id);
+
+    $assignCreateStatus = 'success'; 
+    $assignCreateMessage = 'Assigned Successfully.';
+
+  } catch (Exception $e) {
+    $assignCreateStatus = 'error';
+    $assignCreateMessage = $e->getMessage();
+  }
+
+}
+
+if(isset($_POST['assign_genre'])){
+
+  $genre_id = $_POST['genre_id'];
+  $book_id = $_POST['book_id']; 
+
+  try{
+    $gb_id = $con->insertBookGenre($genre_id, $book_id);
+
+    $genreCreateStatus = 'success'; 
+    $genreCreateMessage = 'Assigned Successfully.';
+
+  } catch (Exception $e) {
+    $genreCreateStatus = 'error';
+    $genreCreateMessage = $e->getMessage();
+  }
+
+}
+
+?>
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -6,7 +102,8 @@
   <title>Books — Admin</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="../assets/css/style.css">
-  <link rel="stylesheet" href="../bootstrap-5.3.3-dist/css/bootstrap.css">
+  <link rel="stylesheet" href="../bootstrap/css/bootstrap.css">
+  <link rel="stylesheet" href="../sweetalert/dist/sweetalert2.css">
 
 </head>
 <body>
@@ -62,7 +159,7 @@
             <label class="form-label">Publisher</label>
             <input class="form-control" name="book_publisher" placeholder="optional">
           </div>
-          <button class="btn btn-primary w-100" type="submit">Save Book</button>
+          <button name="save_book" class="btn btn-primary w-100" type="submit">Save Book</button>
         </form>
       </div>
 
@@ -75,16 +172,16 @@
             <label class="form-label">Book</label>
             <select class="form-select" name="book_id" required>
               <option value="">Select book</option>
-              <option value="1">Noli Me Tangere</option>
-              <option value="2">El Filibusterismo</option>
-              <option value="3">Mga Ibong Mandaragit</option>
-              <option value="4">Smaller and Smaller Circles</option>
-              <option value="5">Dekada ’70</option>
+              <?php
+                foreach($allbooks as $books){
+                  echo '<option value="'.$books['book_id'].'"> '.'['.$books['book_id'].'] '.$books['book_title']. '</option>';
+                }
+              ?>
             </select>
           </div>
           <div class="mb-3">
             <label class="form-label">Status</label>
-            <select class="form-select" name="status" required>
+            <select class="form-select" name="status" required> <!--pinalitan name from status to bc_status-->
               <option value="AVAILABLE">AVAILABLE</option>
               <option value="ON_LOAN">ON_LOAN</option>
               <option value="LOST">LOST</option>
@@ -92,7 +189,7 @@
               <option value="REPAIR">REPAIR</option>
             </select>
           </div>
-          <button class="btn btn-outline-primary w-100" type="submit">Add Copy</button>
+          <button name="add_copy" class="btn btn-outline-primary w-100" type="submit">Add Copy</button> <!--added button name-->
         </form>
       </div>
     </div>
@@ -125,33 +222,30 @@
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td>1</td>
-                <td>Noli Me Tangere</td>
-                <td>9789710810736</td>
-                <td>1887</td>
-                <td>National Book Store</td>
-                <td>3</td>
-                <td><span class="badge text-bg-success">2</span></td>
-                <td class="text-end">
-                  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editBookModal">Edit</button>
-                  <button class="btn btn-sm btn-outline-danger">Delete</button>
-                </td>
-              </tr>
-              <tr>
-                <td>4</td>
-                <td>Smaller and Smaller Circles</td>
-                <td>9789712721768</td>
-                <td>2002</td>
-                <td>Ateneo de Manila University Press</td>
-                <td>2</td>
-                <td><span class="badge text-bg-warning">1</span></td>
-                <td class="text-end">
-                  <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editBookModal">Edit</button>
-                  <button class="btn btn-sm btn-outline-danger">Delete</button>
-                </td>
-              </tr>
-            </tbody>
+
+            <?php
+
+            $viewCopies = $con->viewCopies();
+            foreach($viewCopies as $vw){
+
+            echo '<tr>';
+            echo '<td>'.$vw['book_id']. '</td>';
+            echo '<td>'.$vw['book_title']. '</td>';
+            echo '<td>'.$vw['book_isbn']. '</td>';
+            echo '<td>'.$vw['book_publication_year']. '</td>';
+            echo '<td>'.$vw['book_publisher']. '</td>';
+            echo '<td>'.$vw['Copies']. '</td>';
+            echo '<td>'.$vw['Available_copies']. '</td>';
+            echo '<td class="text-end">';
+            echo '<button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editBookModal">Edit</button>';
+            echo' <button class="btn btn-sm btn-outline-danger">Delete</button>';
+                
+            echo ' </td>';
+            echo ' </tr>';
+            
+              }
+            ?>
+              </tbody>
           </table>
         </div>
 
@@ -167,20 +261,25 @@
                 <div class="col-12 col-md-6">
                   <select class="form-select" name="book_id" required>
                     <option value="">Select book</option>
-                    <option value="1">Noli Me Tangere</option>
-                    <option value="2">El Filibusterismo</option>
+                    <?php
+                foreach($allbooks as $books){
+                  echo '<option value="'.$books['book_id'].'"> '.'['.$books['book_id'].'] '.$books['book_title']. '</option>';
+                }
+              ?>
                   </select>
                 </div>
                 <div class="col-12 col-md-6">
                   <select class="form-select" name="author_id" required>
                     <option value="">Select author</option>
-                    <option value="1">Jose Rizal</option>
-                    <option value="2">Amado Hernandez</option>
-                    <option value="3">F. H. Batacan</option>
+                    <?php
+                foreach($bookauthors as $author){
+                  echo '<option value="'.$author['author_id'].'"> '.'['.$author['author_id'].'] '.$author['author_firstname']. ' '.$author['author_lastname']. '</option>';
+                }
+              ?>
                   </select>
                 </div>
                 <div class="col-12">
-                  <button class="btn btn-outline-primary w-100" type="submit">Assign</button>
+                  <button name="assign_author" class="btn btn-outline-primary w-100" type="submit">Assign</button>
                 </div>
               </form>
               <div class="small-muted mt-2">Unique constraint prevents duplicate (book_id, author_id).</div>
@@ -196,19 +295,25 @@
                 <div class="col-12 col-md-6">
                   <select class="form-select" name="book_id" required>
                     <option value="">Select book</option>
-                    <option value="1">Noli Me Tangere</option>
-                    <option value="2">El Filibusterismo</option>
+                    <?php
+                foreach($allbooks as $books){
+                  echo '<option value="'.$books['book_id'].'"> '.'['.$books['book_id'].'] '.$books['book_title']. '</option>';
+                }
+              ?>
                   </select>
                 </div>
                 <div class="col-12 col-md-6">
                   <select class="form-select" name="genre_id" required>
                     <option value="">Select genre</option>
-                    <option value="1">Classic</option>
-                    <option value="5">Philippine Literature</option>
+                    <?php
+                foreach($listedGenre as $genre){
+                  echo '<option value="'.$genre['genre_id'].'"> '.'['.$genre['genre_id'].'] '.$genre['genre_name']. '</option>';
+                }
+              ?>
                   </select>
                 </div>
                 <div class="col-12">
-                  <button class="btn btn-outline-primary w-100" type="submit">Assign</button>
+                  <button name="assign_genre" class="btn btn-outline-primary w-100" type="submit">Assign</button>
                 </div>
               </form>
               <div class="small-muted mt-2">Unique constraint prevents duplicate (genre_id, book_id).</div>
@@ -251,6 +356,94 @@
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>-->
+
+<script src="../bootstrap-5.3.3-dist/js/bootstrap.bundle.min.js"></script>
+<script src="../sweetalert/dist/sweetalert2.js"></script>
+
+<script>
+
+  const createStatus = <?php echo json_encode($bookCreateStatus)?>;
+  const createMessage = <?php echo json_encode($bookCreateMessage)?>;
+  const addcreateStatus = <?php echo json_encode($addCopyCreateStatus)?>;
+  const addcreateMessage = <?php echo json_encode($addCopyCreateMessage)?>;
+  const assigncreateStatus = <?php echo json_encode($assignCreateStatus)?>;
+  const assigncreateMessage = <?php echo json_encode($assignCreateMessage)?>;
+  const genrecreateStatus = <?php echo json_encode($genreCreateStatus)?>;
+  const genrecreateMessage = <?php echo json_encode($genreCreateMessage)?>;
+
+  if(createStatus == 'success'){
+    Swal.fire({
+      icon: 'success',
+      title: 'Success',
+      text: createMessage,
+      confirmButtonText: 'Ok'
+    });
+
+  }else if(createStatus == 'error'){
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: createMessage,
+          confirmButtonText: 'Ok'
+        });
+      }
+
+    else if(addcreateStatus == 'success'){
+    Swal.fire({
+      icon: 'success',
+      title: 'Success',
+      text: addcreateMessage,
+      confirmButtonText: 'Ok'
+    });
+
+  }else if(addcreateStatus == 'error'){
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: addcreateMessage,
+          confirmButtonText: 'Ok'
+        });
+      }
+
+      else if(assigncreateStatus == 'success'){
+    Swal.fire({
+      icon: 'success',
+      title: 'Success',
+      text: assigncreateMessage,
+      confirmButtonText: 'Ok'
+    });
+
+  }else if(assigncreateStatus == 'error'){
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: assigncreateMessage,
+          confirmButtonText: 'Ok'
+        });
+      }
+
+      if(genrecreateStatus == 'success'){
+    Swal.fire({
+      icon: 'success',
+      title: 'Success',
+      text: genrecreateMessage,
+      confirmButtonText: 'Ok'
+    });
+
+  }else if(genrecreateStatus == 'error'){
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: genrecreateMessage,
+          confirmButtonText: 'Ok'
+        });
+      }
+</script>
+
+
+
+
+
 </body>
 </html>
