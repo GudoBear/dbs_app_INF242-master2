@@ -248,10 +248,9 @@ catch(Exception $e) {
                 <select class="form-select" name="borrower_id" required>
                   <option value="">Select borrower</option>
                   <?php
-                  foreach($allusers as $borrower){
-                  echo '<option value="'.$borrower['borrower_id'].'">'.$borrower["borrower_firstname"]. ' '. $borrower
-                  ['borrower_lastname'].'</option>';
-                  }
+                  foreach($allusers as $borrowers){
+                      echo '<option value="'.$borrowers['borrower_id'] .'"> '.'['.$borrowers['borrower_id'].'] ' .$borrowers['borrower_firstname']. ' '.$borrowers['borrower_lastname']. '</option>';
+                    }
                   ?>
                 </select>
 
