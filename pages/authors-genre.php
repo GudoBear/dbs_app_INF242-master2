@@ -1,0 +1,235 @@
+<?php
+require_once('../classes/database.php');
+
+$con = new database();
+
+$bookauthors = $con->viewAuthors();
+$allgenre = $con->viewGenre();
+
+$authorCreateStatus = null;
+$authorCreateMessage = '';
+
+$genreCreateStatus = null;
+$genreCreateMessage = '';
+
+if(isset($_POST['save_author'])){
+
+  $author_firstname = $_POST['author_firstname'];
+  $author_lastname = $_POST['author_lastname'];
+  $author_birthyear = $_POST['author_birth_year'];
+  $author_nationality = $_POST['author_nationality'];
+
+  try{
+    $author_id = $con->insertAuthor($author_firstname, $author_lastname, $author_birthyear, $author_nationality);
+        
+    $authorCreateStatus = 'success';
+    $authorCreateMessage = 'Author created successfully.';
+  } catch(Exception $e) {
+    $authorCreateStatus = 'error';
+    $authorCreateMessage  = $e->getMessage();
+  }
+}
+
+if(isset($_POST['add_genre'])) {
+  $Genre_name = $_POST['genre_name'];
+
+  try {
+    $con->insertGenre($Genre_name);
+    $genreCreateStatus = 'success';
+    $genreCreateMessage = 'Genre created successfully.';
+  } catch(Exception $e) {
+    $genreCreateStatus = 'error';
+    $genreCreateMessage = 'Error creating genre.';
+  }
+}
+?>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Authors and Genres — Admin(Teaching Demo)</title>
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <link rel="stylesheet" href="../bootstrap/css/bootstrap.css">
+  <link rel="stylesheet" href="../sweetalert/dist/sweetalert2.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
+  <div class="container">
+    <a class="navbar-brand fw-semibold" href="admin-dashboard.php">Library Admin</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navAuthorsGenres">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div id="navAuthorsGenres" class="collapse navbar-collapse">
+      <ul class="navbar-nav me-auto gap-lg-1">
+        <li class="nav-item"><a class="nav-link" href="admin-dashboard.php">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link" href="books.php">Books</a></li>
+        <li class="nav-item"><a class="nav-link active" href="authors-genres.php">Authors&Genres</a></li>
+        <li class="nav-item"><a class="nav-link" href="borrowers.php">Borrowers</a></li>
+        <li class="nav-item"><a class="nav-link" href="checkout.php">Checkout</a></li>
+        <li class="nav-item"><a class="nav-link" href="return.php">Return</a></li>
+        <li class="nav-item"><a class="nav-link" href="catalog.php">Catalog</a></li>
+      </ul>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge badge-soft">Role: ADMIN</span>
+        <a class="btn btn-sm btn-outline-secondary" href="login.php">Logout</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4">
+  <div class="row g-3">
+
+    <div class="col-12 col-lg-6">
+      <div class="card p-4 h-100">
+        <h5 class="mb-1">Add Author</h5>
+        <p class="small-muted mb-3">Creates a row in <b>Authors</b>.</p>
+
+        <form action="#" method="POST" class="row g-2">
+          <div class="col-12 col-md-6">
+            <label class="form-label">First Name</label>
+            <input class="form-control" name="author_firstname" placeholder="e.g., Jose" required>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">Last Name</label>
+            <input class="form-control" name="author_lastname" placeholder="e.g., Rizal" required>
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">Birth Year</label>
+            <input class="form-control" name="author_birth_year" type="number" min="1" max="2100" placeholder="optional">
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label">Nationality</label>
+            <input class="form-control" name="author_nationality" placeholder="optional">
+          </div>
+          <div class="col-12">
+            <button name="save_author" class="btn btn-primary w-100" type="submit">Save Author</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+      <div class="card p-4 h-100">
+        <h5 class="mb-1">Add Genre</h5>
+        <p class="small-muted mb-3">Creates a row in <b>Genres</b>.</p>
+
+        <form action="#" method="POST" class="row g-2">
+          <div class="col-12">
+            <label class="form-label">Genre Name</label>
+            <input class="form-control" name="genre_name" placeholder="e.g., Classic" required>
+          </div>
+          <div class="col-12">
+            <button name="add_genre" class="btn btn-primary w-100" type="submit">Save Genre</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-8">
+      <div class="card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">Authors List</h5>
+          <span class="small-muted">Database data</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Author ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Birth Year</th>
+                <th>Nationality</th>
+              </tr>
+            </thead>
+            <tbody>
+            <?php
+            foreach($bookauthors as $authors){ ?>
+              <tr>
+                <td><?php echo $authors['author_id']; ?></td>
+                <td><?php echo $authors['author_firstname']; ?></td>
+                <td><?php echo $authors['author_lastname']; ?></td>
+                <td><?php echo !empty($authors['author_birth_year']) ? $authors['author_birth_year'] : '-'; ?></td>
+                <td><?php echo !empty($authors['author_nationality']) ? $authors['author_nationality'] : '-'; ?></td>
+              </tr>
+            <?php } ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-4">
+      <div class="card p-4 h-100">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="mb-0">Genres List</h5>
+          <span class="small-muted">Database data</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Genre ID</th>
+                <th>Genre Name</th>
+              </tr>
+            </thead>
+            <tbody>
+            <?php
+            foreach($allgenre as $genres){ ?>
+              <tr>
+                <td><?php echo $genres['genre_id']; ?></td>
+                <td><?php echo $genres['genre_name']; ?></td>
+              </tr>
+            <?php } ?>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="../bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="../sweetalert/dist/sweetalert2.js"></script>
+<script>
+  const authorCreateStatus = <?php echo json_encode($authorCreateStatus)?>;
+  const authorCreateMessage = <?php echo json_encode($authorCreateMessage)?>;
+  const genreCreateStatus = <?php echo json_encode($genreCreateStatus)?>;
+  const genreCreateMessage = <?php echo json_encode($genreCreateMessage)?>;
+
+  if(authorCreateStatus === 'success'){
+    Swal.fire({
+      icon: 'success',
+      title: 'Success',
+      text: authorCreateMessage,
+      confirmButtonText: 'OK'
+    });
+  } else if(authorCreateStatus === 'error'){
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: authorCreateMessage,
+      confirmButtonText: 'OK'
+    });
+  }
+
+  if(genreCreateStatus === 'success'){
+    Swal.fire({
+      icon: 'success',
+      title: 'Success',
+      text: genreCreateMessage,
+      confirmButtonText: 'OK'
+    });
+  } else if(genreCreateStatus === 'error'){
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: genreCreateMessage,
+      confirmButtonText: 'OK'
+    });
+  }
+</script>
+</body>
+</html>
